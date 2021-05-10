@@ -1,0 +1,1 @@
+select a.sid,a.serial#,b.username,to_char(b.logon_time,'DD-MM HH24:MI:SS') LogonDate,a.message from v$session_longops a,v$session b where message like '%SYS.AUD$%' and a.sid=b.sid;

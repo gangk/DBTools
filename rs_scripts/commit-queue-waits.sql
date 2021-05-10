@@ -1,0 +1,1 @@
+SELECT startqueue, node, datediff(ms,startqueue,startwork) AS queue_time, datediff(ms, startwork, endtime) AS commit_time, queuelen FROM stl_commit_stats WHERE startqueue >= dateadd(DAY, -2, CURRENT_DATE) ORDER BY queuelen DESC, queue_time DESC;

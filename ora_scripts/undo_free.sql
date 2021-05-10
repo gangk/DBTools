@@ -1,0 +1,1 @@
+select tablespace_name,sum(bytes/1024/1024) FREE_SPACE from dba_free_space where tablespace_name in (select tablespace_name from dba_tablespaces where tablespace_name like 'UNDO%') group by tablespace_name;

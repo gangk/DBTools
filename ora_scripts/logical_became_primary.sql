@@ -1,0 +1,1 @@
+select first_change# from dba_logstdby_history where status = 'Current' ;

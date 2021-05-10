@@ -1,0 +1,1 @@
+select to_char(time_dp,'DD-MON-YY HH24:MI:SS') TIMESTAMP, scn_wrp*4294967296+SCN_bas SCN from smon_scn_time where scn_bas='&scn_base';

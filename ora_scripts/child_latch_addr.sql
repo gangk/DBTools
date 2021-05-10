@@ -1,0 +1,1 @@
+select addr from v$latch_children where child#=&child_latch_number;

@@ -1,0 +1,2 @@
+SELECT substr(sql_text,1,60) Stmt, count(*),sum(sharable_mem) Mem,sum(users_opening) Open,sum(executions) Exec FROM v$sql
+GROUP BY substr(sql_text,1,60) HAVING sum(sharable_mem) > 1048576 -- %10 of Shared Pool Size;

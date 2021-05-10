@@ -1,0 +1,5 @@
+set echo on
+def pid=&1
+ORADEBUG SETOSPID &&pid
+ORADEBUG EVENT 10046 TRACE NAME CONTEXT FOREVER, level 12
+undef pid

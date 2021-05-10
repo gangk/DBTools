@@ -1,0 +1,6 @@
+SELECT ADD_MONTHS (SYSDATE, -1),SUM (BYTES) / 1073741824
+  FROM v$datafile
+ WHERE creation_time < ADD_MONTHS (SYSDATE, -1)
+UNION ALL
+SELECT sysdate, SUM (BYTES) / 1073741824
+  FROM v$datafile;

@@ -1,0 +1,1 @@
+select sql_id,sum(EXECUTIONS),sum(BUFFER_GETS),sum(DISK_READS) ,sum(ROWS_PROCESSED),sum(BUFFER_GETS)/sum(EXECUTIONS) "Per Execution Buffer gets", sum(DISK_READS)/sum(EXECUTIONS) "per exec disk reads" from v$sqlarea where sql_id in (select distinct sql_id from v$sql where module='&module') group by sql_id order by 2;

@@ -1,0 +1,1 @@
+select table_name,partition_name,num_rows,sample_size,to_char(last_analyzed,'YYYY-MM-DD-HH24:MI:SS') "Last Analyzed",global_stats,stale_stats,STATTYPE_LOCKED from dba_tab_statistics where table_name=upper('&table_name');

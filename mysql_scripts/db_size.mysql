@@ -1,0 +1,1 @@
+SELECT FLOOR(SUM(DATA_LENGTH+INDEX_LENGTH)/POWER(1024,2)) 'Total Size (MB)', FLOOR(SUM(DATA_LENGTH)/POWER(1024,2)) 'Data Size (Data_length in MB)', FLOOR(SUM(INDEX_LENGTH)/POWER(1024,2)) 'Index Size (Index_length in MB)' FROM information_schema.TABLES;

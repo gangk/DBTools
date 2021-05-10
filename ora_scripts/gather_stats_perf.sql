@@ -1,0 +1,1 @@
+select * from sys.optstat_hist_control$;

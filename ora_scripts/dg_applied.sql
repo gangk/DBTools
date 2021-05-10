@@ -1,0 +1,1 @@
+select inst_id,max(SEQUENCE#), ARCHIVED, APPLIED from  gv$archived_log where APPLIED='YES' group by inst_id, archived,applied;

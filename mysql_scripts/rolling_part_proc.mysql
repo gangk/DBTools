@@ -1,0 +1,204 @@
+DELIMITER //
+CREATE DEFINER=`transmaster`@`%` PROCEDURE `partition_create` (SCHEMANAME VARCHAR(64), TABLENAME VARCHAR(64), PARTITIONNAME VARCHAR(64), PARTITION_KEY DATE)
+BEGIN
+        DECLARE RETROWS INT;
+        SELECT COUNT(1) INTO RETROWS
+        FROM information_schema.partitions
+        WHERE table_schema = SCHEMANAME
+	AND TABLE_NAME = TABLENAME
+	AND partition_name = PARTITIONNAME;
+        IF RETROWS = 0 THEN
+
+                SELECT CONCAT( "partition_create(", SCHEMANAME, ",", TABLENAME, ",", PARTITIONNAME, ",",PARTITION_KEY,")" ) AS msg;
+                SET @SQL = CONCAT( 'ALTER TABLE ', SCHEMANAME, '.', TABLENAME, ' ADD PARTITION (PARTITION ', PARTITIONNAME, ' VALUES LESS THAN (''',PARTITION_KEY,'''));' );
+                PREPARE STMT FROM @SQL;
+                EXECUTE STMT;
+                DEALLOCATE PREPARE STMT;
+        END IF;
+END//
+
+DELIMITER //
+CREATE DEFINER=`transmaster`@`%` PROCEDURE `partition_drop`(SCHEMANAME VARCHAR(64), TABLENAME VARCHAR(64), DELETE_BELOW_PARTITION_DATE BIGINT)
+BEGIN
+
+        DECLARE done INT DEFAULT FALSE;
+        DECLARE drop_part_name VARCHAR(16);
+
+
+        DECLARE myCursor CURSOR FOR
+                SELECT partition_name
+                FROM information_schema.partitions
+                WHERE table_schema = SCHEMANAME AND TABLE_NAME = TABLENAME AND CAST(SUBSTRING(partition_name FROM 7) AS UNSIGNED) < DELETE_BELOW_PARTITION_DATE;
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+
+        SET @alter_header = CONCAT("ALTER TABLE ", SCHEMANAME, ".", TABLENAME, " DROP PARTITION ");
+        SET @drop_partitions = "";
+
+
+        OPEN myCursor;
+        read_loop: LOOP
+                FETCH myCursor INTO drop_part_name;
+                IF done THEN
+                        LEAVE read_loop;
+                END IF;
+                SET @drop_partitions = IF(@drop_partitions = "", drop_part_name, CONCAT(@drop_partitions, ",", drop_part_name));
+        END LOOP;
+        IF @drop_partitions != "" THEN
+
+                SET @full_sql = CONCAT(@alter_header, @drop_partitions, ";");
+                PREPARE STMT FROM @full_sql;
+                EXECUTE STMT;
+                DEALLOCATE PREPARE STMT;
+
+                SELECT CONCAT(SCHEMANAME, ".", TABLENAME) AS `table`, @drop_partitions AS `partitions_deleted`;
+        ELSE
+
+                SELECT CONCAT(SCHEMANAME, ".", TABLENAME) AS `table`, "N/A" AS `partitions_deleted`;
+        END IF;
+END//
+
+
+
+DELIMITER //
+CREATE DEFINER=`transmaster`@`%` PROCEDURE `partition_maintenance`(SCHEMA_NAME VARCHAR(64), TABLE_NAME VARCHAR(64), KEEP_DATA_DAYS INT, CREATE_NEXT_INTERVALS INT)
+BEGIN
+        DECLARE OLDER_THAN_PARTITION_DATE VARCHAR(16);
+        DECLARE PARTITION_NAME VARCHAR(16);
+        DECLARE PARTITION_KEY DATE;
+        DECLARE CUR_TIME INT;
+
+        SET CUR_TIME = UNIX_TIMESTAMP(DATE_FORMAT(NOW(), '%Y-%m-%d 00:00:00'));
+        SET PARTITION_KEY = DATE_FORMAT(NOW(), '%Y-%m-%d');
+        IF DATE(NOW()) = '2014-04-01' THEN
+                SET CUR_TIME = UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 DAY), '%Y-%m-%d 00:00:00'));
+        END IF;
+        SET @__interval = 1;
+        create_loop: LOOP
+                IF @__interval > CREATE_NEXT_INTERVALS THEN
+                        LEAVE create_loop;
+                END IF;
+
+
+                SET PARTITION_NAME = DATE_FORMAT(DATE_SUB(PARTITION_KEY,INTERVAL 1 DAY),'DAILY_%Y%m%d');
+                CALL partition_create(SCHEMA_NAME, TABLE_NAME, PARTITION_NAME, PARTITION_KEY);
+                SET PARTITION_KEY = DATE_FORMAT(DATE_ADD(NOW(),INTERVAL (@__interval) DAY),'%Y-%m-%d');
+                SET @__interval=@__interval + 1;
+
+        END LOOP;
+
+        SET OLDER_THAN_PARTITION_DATE=DATE_FORMAT(DATE_SUB(NOW(), INTERVAL KEEP_DATA_DAYS DAY), '%Y%m%d');
+        CALL partition_drop(SCHEMA_NAME, TABLE_NAME, OLDER_THAN_PARTITION_DATE);
+
+END//
+
+
+
+DELIMITER //
+CREATE DEFINER=`transmaster`@`%` PROCEDURE `partition_maintenance_all`(SCHEMA_NAME VARCHAR(32))
+BEGIN
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_DIVERT_EVENTS',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_HISTORY_DATA',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_METADATA',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_MOVEMENT_DATA',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_PRINT_DATA',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_REPRINT_DATA',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_STATE_CHANGE_DATA',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'LOADS_REPORT_DATA',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'LOAD_STATUS_MAPPINGS_HISTORY',28, 16);
+CALL partition_maintenance(SCHEMA_NAME,'TRAILER_STATUS_MAPPINGS_HIST',28, 16);
+CALL partition_maintenance(SCHEMA_NAME,'LOAD_ANNOTATION_DATA',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'LOAD_TRAILER_MAPPINGS_HISTORY',28, 16);
+CALL partition_maintenance(SCHEMA_NAME,'RESERVATIONS',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'MOVE_ATTEMPTS_DATA',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'FAILED_MOVE_ATTEMPTS_DATA',28,16);
+CALL partition_maintenance(SCHEMA_NAME,'TRIAGE_ANDON_DATA',28, 16);
+CALL partition_maintenance(SCHEMA_NAME,'AUDIT_ATTEMPT_DATA',28, 16);
+
+END//
+
+DELIMITER //
+CREATE DEFINER=`transmaster`@`%` PROCEDURE `partition_verify`(SCHEMANAME VARCHAR(64), TABLENAME VARCHAR(64), HOURLYINTERVAL INT(11))
+BEGIN
+        DECLARE PARTITION_NAME VARCHAR(16);
+        DECLARE RETROWS INT(11);
+        DECLARE FUTURE_TIMESTAMP TIMESTAMP;
+
+
+        SELECT COUNT(1) INTO RETROWS
+        FROM information_schema.partitions
+        WHERE table_schema = SCHEMANAME AND TABLE_NAME = TABLENAME AND partition_name IS NULL;
+
+
+        IF RETROWS = 1 THEN
+
+                SET FUTURE_TIMESTAMP = TIMESTAMPADD(HOUR, HOURLYINTERVAL, CONCAT(CURDATE(), " ", '00:00:00'));
+                SET PARTITION_NAME = DATE_FORMAT(CURDATE(), 'DAILY_%Y%m%d');
+
+
+                SET @__PARTITION_SQL = CONCAT("ALTER TABLE ", SCHEMANAME, ".", TABLENAME, " PARTITION BY RANGE(UNIX_TIMESTAMP(partition_key))");
+                SET @__PARTITION_SQL = CONCAT(@__PARTITION_SQL, "(PARTITION ", PARTITION_NAME, " VALUES LESS THAN (", UNIX_TIMESTAMP(FUTURE_TIMESTAMP), "));");
+
+
+                PREPARE STMT FROM @__PARTITION_SQL;
+                EXECUTE STMT;
+                DEALLOCATE PREPARE STMT;
+        END IF;
+END//
+
+CREATE DEFINER=`transmaster`@`%` EVENT `scrs_partition_event` ON SCHEDULE EVERY 1 DAY STARTS '2016-02-11 17:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL <dbname>.partition_maintenance_all('<dbname>');
+
+last check - in:
+DELIMITER //
+CREATE DEFINER=`transmaster`@`%` PROCEDURE `partition_maintenance_all`(SCHEMA_NAME VARCHAR(32))
+BEGIN
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_DIVERT_EVENTS',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_HISTORY_DATA',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_METADATA',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_MOVEMENT_DATA',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_PRINT_DATA',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_REPRINT_DATA',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_STATE_CHANGE_DATA',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'LOADS_REPORT_DATA',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'LOAD_STATUS_MAPPINGS_HISTORY',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'TRAILER_STATUS_MAPPINGS_HIST',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'LOAD_ANNOTATION_DATA',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'LOAD_TRAILER_MAPPINGS_HISTORY',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'RESERVATIONS',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'MOVE_ATTEMPTS_DATA',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'FAILED_MOVE_ATTEMPTS_DATA',15,16);
+CALL partition_maintenance(SCHEMA_NAME,'TRIAGE_ANDON_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'AUDIT_ATTEMPT_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'WRONG_BUILDING_SCAN_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_PROCESSING_REQUESTS',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'TOOL_AUDIT_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'ERGO_TASK_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'ERGO_ASSIGNMENT_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_INTERCEPT_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'CORODEAR_REPLAN_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'PRISM_WORKFLOW_INFO_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'PRISM_CONTAINER_PROBLEM_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'PRISM_SYSTEM_ACTION_TAKEN_DATA',15, 16);
+CALL partition_maintenance(SCHEMA_NAME,'PRISM_USER_INSTRUCTION_DATA',15, 16);
+
+END//
+
+
+DELIMITER //
+CREATE DEFINER=`transmaster`@`%` PROCEDURE `partition_maintenance_all`(SCHEMA_NAME VARCHAR(32))
+BEGIN
+CALL partition_maintenance(SCHEMA_NAME,'SSP_CONTAINER_UNLOAD_AGGREGATE',32,16);
+
+END//
+
+DELIMITER //
+CREATE DEFINER=`transmaster`@`%` PROCEDURE `partition_maintenance_all`(SCHEMA_NAME VARCHAR(32))
+BEGIN
+CALL partition_maintenance(SCHEMA_NAME,'CONTAINER_HISTORY_DATA',32,16);
+
+END//
+
+CREATE DEFINER=`transmaster`@`%` EVENT `sspt_partition_event` ON SCHEDULE EVERY 1 DAY STARTS '2018-01-16 23:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL psspt1jp.partition_maintenance_all('psspt1jp');
+
+CREATE DEFINER=`transmaster`@`%` EVENT `sspt_partition_event` ON SCHEDULE EVERY 1 DAY STARTS '2018-01-16 23:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL psspt1cn.partition_maintenance_all('psspt1cn');
+

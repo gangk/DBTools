@@ -1,0 +1,1 @@
+select inst_id,pub_ksxpia,picked_ksxpia,name_ksxpia,ip_ksxpia from x$ksxpia where pub_ksxpia='N';

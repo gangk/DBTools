@@ -1,0 +1,1 @@
+select sum(bytes)/1024/1024 mb from (select bytes from v$sgastat union select value bytes from v$sesstat s, v$statname n where n.STATISTIC# = s.STATISTIC# and  n.name = 'session pga memory' );

@@ -1,0 +1,11 @@
+select * from pg_catalog.pg_stat_progress_vacuum;
+
+select name,setting from pg_settings where name in ('autovacuum_vacuum_cost_limit','autovacuum_vacuum_scale_factor','autovacuum_vacuum_threshold','autovacuum_vacuum_cost_delay');
+
+select relid, relname,n_tup_del, n_live_tup , n_dead_tup, last_autovacuum, last_autoanalyze from pg_stat_user_tables where schemaname='booker' and n_dead_tup > 2000 order by 5;
+
+select relname,n_tup_ins,n_tup_upd,n_tup_del,n_tup_hot_upd,n_live_tup,n_dead_tup,n_mod_since_analyze,last_autovacuum,last_autoanalyze from pg_stat_user_tables where relname like 'inv_level_by%';
+
+select relid, relname,n_tup_del, n_live_tup , n_dead_tup, last_autovacuum, last_autoanalyze from pg_stat_user_tables where schemaname='booker' and n_dead_tup > 2500 and now() - last_autovacuum > '2 days'::interval;
+
+

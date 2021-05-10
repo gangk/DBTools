@@ -1,0 +1,1 @@
+SELECT date_trunc('hour', starttime) AS START, count(query) FROM stl_query WHERE query IN (SELECT DISTINCT query FROM stl_alert_event_log WHERE event LIKE 'Nested Loop Join in the query plan%') GROUP BY START ORDER BY START ASC;

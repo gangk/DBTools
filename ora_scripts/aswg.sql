@@ -1,0 +1,1 @@
+select s.inst_id,nvl(s.username, '(oracle)') AS username,s.sid,s.serial#,p.spid,s.machine,sw.event,s.sql_id,sw.wait_time,sw.seconds_in_wait,sw.state from gv$session_wait sw,gv$session s ,gv$process p where s.sid=sw.sid and s.paddr=p.addr and s.status='ACTIVE' AND  s.username not in 'oracle' order by seconds_in_wait

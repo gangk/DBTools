@@ -1,0 +1,1 @@
+select TABLE_NAME,PARTITION_NAME,HIGH_VALUE,TABLESPACE_NAME from dba_tab_partitions where TABLE_NAME=upper('&TABLE_NAME') order by PARTITION_POSITION;

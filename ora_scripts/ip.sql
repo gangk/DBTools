@@ -1,0 +1,1 @@
+select utl_inaddr.get_host_address(Host_Name) from V$INSTANCE;

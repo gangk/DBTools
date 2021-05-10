@@ -1,0 +1,1 @@
+select INST_ID,PROCESS,STATUS,THREAD#,SEQUENCE#,BLOCK#,DELAY_MINS from  gv$managed_standby where process like 'MRP%';

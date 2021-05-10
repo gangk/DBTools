@@ -1,0 +1,1 @@
+select max(scn_bas) SCN_BASE from smon_scn_time;

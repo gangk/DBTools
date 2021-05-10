@@ -1,0 +1,5 @@
+SELECT id,state,command,time,left(replace(info,'\n','<lf>'),120)
+FROM information_schema.processlist
+WHERE command <> 'Sleep' 
+AND info NOT LIKE '%PROCESSLIST%'
+ORDER BY time DESC LIMIT 50;

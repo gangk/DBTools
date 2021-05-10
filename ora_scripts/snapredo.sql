@@ -1,0 +1,1 @@
+ @snapper "stats,gather=s,sinclude=redo size" 10 1 "select sid from v$session"

@@ -1,0 +1,31 @@
+
+DELIMITER //
+
+CREATE DEFINER=`transmaster`@`%` PROCEDURE kill_ro_user()
+BEGIN
+DECLARE thread_id INT;
+DECLARE iteration_complete INT DEFAULT 0;
+DECLARE select_cursor CURSOR FOR SELECT id FROM INFORMATION_SCHEMA.PROCESSLIST WHERE user like '%_ro';
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET iteration_complete=1;
+
+OPEN select_cursor;
+cursor_loop: LOOP
+FETCH select_cursor INTO thread_id;
+IF iteration_complete THEN
+LEAVE cursor_loop;
+END IF;
+CALL mysql.rds_kill(thread_id);
+END LOOP;
+CLOSE select_cursor;
+
+END//
+
+
+CREATE DEFINER=`transmaster`@`%` EVENT `KILL_ROUSER_ONMASTER` ON SCHEDULE EVERY 10 MINUTE STARTS '2017-12-21 00:20:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL pscrsna.kill_ro_user();
+
+CREATE DEFINER=`transmaster`@`%` EVENT `KILL_ROUSER_ONMASTER` ON SCHEDULE EVERY 10 MINUTE STARTS '2017-12-21 00:10:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL pscrseu.kill_ro_user();
+
+CREATE DEFINER=`transmaster`@`%` EVENT `KILL_ROUSER_ONMASTER` ON SCHEDULE EVERY 10 MINUTE STARTS '2017-12-21 00:20:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL pscrsjp.kill_ro_user();
+
+
+

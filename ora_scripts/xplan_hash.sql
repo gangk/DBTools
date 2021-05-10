@@ -1,0 +1,1 @@
+SELECT id, parent_id, LPAD (' ', LEVEL - 1) || operation || ' ' || options operation, object_name,cardinality from v$sql_plan where hash_value=&sqlhash;

@@ -1,0 +1,1 @@
+select host_name from V$instance;

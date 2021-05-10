@@ -1,0 +1,1 @@
+select sql_id, sql_text, executions, child_latch from v$sqlarea where upper(sql_text) like 'upper(&sql_text)';

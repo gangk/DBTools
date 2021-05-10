@@ -1,0 +1,25 @@
+SELECT
+  S.SID,
+  S.USERNAME,
+  S.PROGRAM,
+  S.SQL_ID,
+  L.REQUEST,
+  L.ID1,
+  L.ID2,
+  L.LMODE,
+  L.TYPE,
+  L.BLOCK
+FROM
+  V$LOCK L,
+  V$SESSION S
+WHERE
+  (L.ID1, L.ID2, L.TYPE) IN
+  (SELECT
+    ID1,
+    ID2,
+    TYPE
+  FROM
+    V$LOCK
+  WHERE
+    REQUEST > 0)
+  AND L.SID=S.SID; 

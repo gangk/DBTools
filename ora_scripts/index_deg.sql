@@ -1,0 +1,1 @@
+select 'alter index '||owner||'.'||index_name||' parallel (degree 1);' from dba_indexes where degree>'1';

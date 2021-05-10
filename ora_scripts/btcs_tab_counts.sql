@@ -1,0 +1,11 @@
+select count(1) batch_buff_grp_member_hist from batch_buff_grp_member_hist;
+select count(1) batch_buffer_group_dests from batch_buffer_group_dests;
+select count(1) batch_buffer_group_hist from batch_buffer_group_hist;
+select count(1) batch_buffer_group_members from batch_buffer_group_members;
+select count(1) batch_buffer_groups from batch_buffer_groups;
+select count(1) batch_buffer_grp_dest_hist from batch_buffer_grp_dest_hist;
+select count(1) batch_buffer_hist from batch_buffer_hist;
+select count(1) batch_buffers from batch_buffers;
+select count(1) sort_batch_buffer_assignments from sort_batch_buffer_assignments;
+select count(1) sort_cont_buff_assignment_hist from sort_cont_buff_assignment_hist;
+select count(1) sort_cont_buff_assignments from sort_cont_buff_assignments;

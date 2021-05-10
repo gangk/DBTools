@@ -1,0 +1,89 @@
+select 
+	'alter '||DECODE(dep.type,'PACKAGE BODY','PACKAGE','TYPE BODY','TYPE',dep.type)||' '||dep.OWNER||'."'||dep.NAME||'" compile '||
+        decode(dep.type,'PACKAGE BODY','BODY','TYPE BODY','BODY','')||';'
+from 
+	dba_dependencies dep,dba_objects obj,dba_objects ref
+where
+REFERENCED_NAME in
+(
+'DBMS_JAVA_TEST',
+'DBMS_JOB',
+'DBMS_SCHEDULER',
+'DBMS_XMLGEN',
+'EXU10LNKU',
+'EXU8LNKU',
+'EXU9LNKU',
+'GV_$ENCRYPTED_TABLESPACES',
+'HTTPURITYPE',
+'KU$_10_1_DBLINK_VIEW',
+'KU$_DBLINK_VIEW',
+'KU$_DIRECTORY_T',
+'KU$_DIRECTORY_VIEW',
+'KU$_FGA_POLICY_T',
+'KU$_FGA_POLICY_VIEW',
+'KU$_LIBRARY_VIEW',
+'KU$_RLS_POLICY_OBJNUM_T',
+'KU$_RLS_POLICY_OBJNUM_VIEW',
+'KU$_RLS_POLICY_T',
+'KU$_RLS_POLICY_VIEW',
+'LOADER_DIR_OBJS',
+'ORA_KGLR7_DB_LINKS',
+'ROLE_ROLE_PRIVS',
+'SESSION_CONTEXT',
+'UTL_HTTP',
+'UTL_INADDR',
+'UTL_SMTP',
+'V_$ENCRYPTED_TABLESPACES'
+)
+and
+        dep.name=obj.object_name
+and
+        dep.owner=obj.owner
+and
+        dep.type=obj.object_type
+and
+        dep.referenced_name=ref.object_name
+and
+        dep.referenced_owner=ref.owner
+and
+        dep.referenced_type=ref.object_type
+and     
+	dep.type<>'SYNONYM'
+and     
+	obj.status<>'VALID'
+union
+select 'alter '||decode(object_type,'PACKAGE BODY','PACKAGE','TYPE BODY','TYPE',object_type)||' sys."'||object_name||'" compile '||decode(object_type,'PACKAGE BODY','BODY','TYPE BODY','BODY','')||';'
+from
+dba_objects where object_name in 
+(
+'DBMS_JAVA_TEST',
+'DBMS_JOB',
+'DBMS_SCHEDULER',
+'DBMS_XMLGEN',
+'EXU10LNKU',
+'EXU8LNKU',
+'EXU9LNKU',
+'GV_$ENCRYPTED_TABLESPACES',
+'HTTPURITYPE',
+'KU$_10_1_DBLINK_VIEW',
+'KU$_DBLINK_VIEW',
+'KU$_DIRECTORY_T',
+'KU$_DIRECTORY_VIEW',
+'KU$_FGA_POLICY_T',
+'KU$_FGA_POLICY_VIEW',
+'KU$_LIBRARY_VIEW',
+'KU$_RLS_POLICY_OBJNUM_T',
+'KU$_RLS_POLICY_OBJNUM_VIEW',
+'KU$_RLS_POLICY_T',
+'KU$_RLS_POLICY_VIEW',
+'LOADER_DIR_OBJS',
+'ORA_KGLR7_DB_LINKS',
+'ROLE_ROLE_PRIVS',
+'SESSION_CONTEXT',
+'UTL_HTTP',
+'UTL_INADDR',
+'UTL_SMTP',
+'V_$ENCRYPTED_TABLESPACES'
+)
+and owner='SYS'
+and status<>'VALID';

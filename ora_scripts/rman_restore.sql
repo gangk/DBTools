@@ -1,0 +1,17 @@
+set lines 180 pages 1000 numwidth 15
+column OPERATION for a8
+column STATUS for a10
+column OPERATION for a10
+alter session set nls_date_format='YYYY.MM.DD HH24:MI:SS';
+select 
+OPERATION, 
+STATUS, 
+MBYTES_PROCESSED/1024 GB_PROCESSED, 
+START_TIME, 
+END_TIME,
+(END_TIME-START_TIME)*24*60 RUNTIME_MINS,
+trunc(INPUT_BYTES/1024/1024/1024,2) INPUT_GB, 
+trunc(OUTPUT_BYTES/1024/1024/1024,2) OUTPUT_GB
+from V$RMAN_STATUS
+where START_TIME > sysdate - 1
+and OPERATION = 'RESTORE';

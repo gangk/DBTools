@@ -1,0 +1,1 @@
+SELECT SUM(IF(variable_name = 'Com_select', variable_value, 0)) AS `Total reads`, SUM(IF(variable_name IN ('Com_delete', 'Com_insert', 'Com_update', 'Com_replace'), variable_value, 0)) AS `Total writes`  FROM information_schema.GLOBAL_STATUS;

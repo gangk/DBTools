@@ -1,0 +1,2 @@
+select * from table(select dbms_workload_repository.awr_report_text(dbid,inst_id, prev_snap, max_snap) from ( select d.dbid, i.inst_id, snap_id max_snap , lead(s.snap_id, 1) over (partition by s.instance_number, s.instance_number order by snap_id desc) prev_snap from gv$instance i , gv$database d , dba_hist_snapshot s where d.inst_id = i.inst_id and s.dbid = d.dbid and s.instance_number = i.inst_id and instance_role = 'PRIMARY_INSTANCE') where rownum = 1)
+/

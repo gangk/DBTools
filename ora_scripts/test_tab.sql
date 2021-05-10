@@ -1,0 +1,1 @@
+select owner,segment_name,segment_type,sum(bytes/1024/1024/1024) "TABLE_GB" , tablespace_name from dba_segments where owner in ('BOOKER','ADMIN','USERS') and (bytes/1024/1024/1024) > 2 group by owner,segment_name,segment_type,tablespace_name order by 1,4;

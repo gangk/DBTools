@@ -1,0 +1,1 @@
+select a.thread#, max(a.sequence#)-max(b.sequence#) as gap from v$archived_log a, v$log_history b where a.thread#=b.thread# group by a.thread#;

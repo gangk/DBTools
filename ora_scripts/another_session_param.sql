@@ -1,0 +1,1 @@
+select * from V$SES_OPTIMIZER_ENV where sid=&sid;

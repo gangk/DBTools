@@ -1,0 +1,1 @@
+Select   sid,  start_time,  totalwork, sofar,  (sofar/totalwork) * 100 pct_done from  v$session_longops  where  totalwork > sofar ;

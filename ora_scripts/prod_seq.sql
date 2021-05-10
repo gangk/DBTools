@@ -1,0 +1,1 @@
+select max(sequence#) from v$archived_log;

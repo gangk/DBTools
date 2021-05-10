@@ -1,0 +1,1 @@
+select s.sid, s.serial#, p.spid  from v$session s, v$process p where s.paddr=p.addr and s.sid in (select SESSION_ID from V$LOCKED_OBJECT);

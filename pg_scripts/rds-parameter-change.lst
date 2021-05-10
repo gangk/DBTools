@@ -1,0 +1,44 @@
+aws_rds \
+--parallel 8 \
+--acct     fclm-xna-rds-prod \
+--region   us-east-1 \
+--db_cluster_id       'aftli%' \
+--engine   aurora_postgresql \
+--rds-client-method     modify-db-parameter-group \
+--ParameterName         random_page_cost \
+--ParameterValue        1  \
+--ApplyMethod           immediate \
+--DbParameterGroupName  %aurora-dbinsts-postgres-pg% # wildcard
+
+
+aws_rds \
+--parallel 8 \
+--acct-url  https://access.amazon.com/aws/accounts/show/fclm-xna-rds-prod \
+--region   us-east-1 \
+--db_cluster_id       'aftli-015' \
+--engine   aurora_postgresql \
+--rds-client-method     modify-db-parameter-group \
+--ParameterName         random_page_cost \
+--ParameterValue        1  \
+--ApplyMethod           immediate \
+--DbParameterGroupName  %aurora-dbinsts-postgres-pg%
+
+
+db_query.rb \
+--name adhoc \
+--parallel 8 \
+--acct     fclm-xna-rds-beta \
+--region   us-east-1 \
+--db_cluster_id       'taftli%' \
+--engine   aurora_postgresql \
+--rds-client-method     modify-db-parameter-group \
+--ParameterName         random_page_cost \
+--ParameterValue        1  \
+--ApplyMethod           immediate \
+--DbParameterGroupName  %aurora-dbinsts-postgres-pg% # wildcard
+
+
+https://w.amazon.com/bin/view/OpsTechDB/DBQuery/#HAWSCLI
+
+db_query.rb --db_cluster_id=taftli-% --region us-east-1 --acct fclm-xna-rds-beta \
+--cli 'aws rds modify-db-parameter-group --db-parameter-group-name %aurora-dbinsts-postgres-pg% --ParameterName random_page_cost --ParameterValue 1 --ApplyMethod immediate'

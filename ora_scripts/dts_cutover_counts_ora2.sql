@@ -1,0 +1,9 @@
+ALTER SESSION enable PARALLEL query;
+ALTER SESSION force PARALLEL query;
+
+select /*+ FULL(a) PARALLEL(a,8) */ count(1) TRANSFER_DELIVERIES from booker.TRANSFER_DELIVERIES a;
+select /*+ FULL(a) PARALLEL(a,8) */ count(1) TRANSFER_DELIVERY_ITEMS from booker.TRANSFER_DELIVERY_ITEMS a;
+select /*+ FULL(a) PARALLEL(a,8) */ count(1) TDI_ICI_IDS from booker.TDI_ICI_IDS a;
+select /*+ FULL(a) PARALLEL(a,8) */ count(1) TRANSFER_INBD_CONTAINERS from booker.TRANSFER_INBD_CONTAINERS a;
+select /*+ FULL(a) PARALLEL(a,8) */ count(1) TRANSFER_INBD_CONTAINER_ITEMS from booker.TRANSFER_INBD_CONTAINER_ITEMS a;
+select /*+ FULL(a) PARALLEL(a,8) */ count(1) TRANSFER_RECEIVE_ACTIONS from booker.TRANSFER_RECEIVE_ACTIONS a;

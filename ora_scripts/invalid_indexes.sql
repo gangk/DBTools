@@ -1,0 +1,1 @@
+select 'alter index '||owner||'.'||index_name||' rebuild online ;' from dba_indexes where STATUS='INVALID';

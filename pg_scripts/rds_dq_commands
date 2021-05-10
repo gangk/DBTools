@@ -1,0 +1,108 @@
+-->>> Distributed QUERY TOOL: https://w.amazon.com/bin/view/OpsTechDB/DBQuery
+
+dbq --csv -o <log_file> --postgresql --parallel=25 --sql <sql_script> --db_cluster_id=fc%its --limit=<noofdb> --reader/writer/both
+
+E.g.
+
+On both writer & Reader: dbq --csv -o /tmp/long_query_dq_gangk.log --postgresql --parallel=25 --sql long_query_dq.sql --db_cluster_id=fc%its
+
+On writer:  dbq --csv -o /tmp/vacuum_max_table_dq_gangk.log --postgresql --parallel=25 --sql vacuum_max_table_dq.sql --db_cluster_id=fc%its --writer
+
+
+Fixed Reports:::
+dbq --base_engine=postgresql --rpt=idle_transactions --db_monitor_yn=y --parallel=12 --upload-delete --err=999 --db_cluster_id=fc%its --csv
+    EBSMaxBlocks
+    HiCardSku-Legacy
+    HiCardSku-RDS
+    WaitEvents-Critical
+    autovacuum
+    autovacuum_thresh
+    blockers_waiters
+    db.canary
+    idle_transactions
+    its_part_perms
+    its_table_privs_missing
+    max_partition_warning
+    metric_autovacuum_errors
+    pg_settings_autovacuum
+    ro_part_perms
+    rolling_partitions_missing
+    rw_part_perms
+    sniper
+    sniper_test
+    test
+
+
+-->>> Alarm/Dashboard Set up: https://w.amazon.com/bin/view/OpsTechDB/DBFleetObjects/
+
+/apollo/env/FCDBFleetTools/bin/dbfleet.rb --acct_id=975578216893 --region=us-east-1 --db_cluster_id=pscrsna-aurora-prod --enable  --launch-date=NOW --production --objtypes=alarms,carnaval,dashboard
+
+-- Parameter change
+
+/apollo/env/FCDBFleetTools/bin/aws_rds.rb \
+  --api=modify_db_parameter_group \
+  --parameter_name=tcp_keepalives_count \
+  --ParameterValue=2 \
+  --acct='ITSDatabase-test' \
+  --region=us-% \
+  --ApplyMethod=immediate \
+  --clu=%tfc% \
+  --parallel=2 \
+  --max-errors=10
+
+/apollo/env/FCDBFleetTools/bin/aws_rds.rb \
+  --api=modify_db_parameter_group \
+  --parameter_name=tcp_keepalives_idle \
+  --ParameterValue=300 \
+  --acct='ITSDatabase-test' \
+  --region=us-% \
+  --ApplyMethod=immediate \
+  --clu=%tfc% \
+  --parallel=2 \
+  --max-errors=10
+
+
+/apollo/env/FCDBFleetTools/bin/aws_rds.rb \
+  --api=modify_db_parameter_group \
+  --parameter_name=tcp_keepalives_interval \
+  --ParameterValue=30 \
+  --acct='ITSDatabase-test' \
+  --region=us-% \
+  --ApplyMethod=immediate \
+  --clu=%tfc% \
+  --parallel=2 \
+  --max-errors=10
+
+
+-- FC DBA
+
+/apollo/env/FCDBFleetTools/bin/aws_rds.rb \
+  --api=modify_db_parameter_group \
+  --parameter_name=tcp_keepalives_count \
+  --ParameterValue=2 \
+  --acct='FC DBA' \
+  --region=us-% \
+  --ApplyMethod=immediate \
+  --parallel=2 \
+  --max-errors=10
+
+/apollo/env/FCDBFleetTools/bin/aws_rds.rb \
+  --api=modify_db_parameter_group \
+  --parameter_name=tcp_keepalives_idle \
+  --ParameterValue=300 \
+  --acct='FC DBA' \
+  --region=us-% \
+  --ApplyMethod=immediate \
+  --parallel=2 \
+  --max-errors=10
+
+
+/apollo/env/FCDBFleetTools/bin/aws_rds.rb \
+  --api=modify_db_parameter_group \
+  --parameter_name=tcp_keepalives_interval \
+  --ParameterValue=30 \
+  --acct='FC DBA' \
+  --region=us-% \
+  --ApplyMethod=immediate \
+  --parallel=2 \
+  --max-errors=10

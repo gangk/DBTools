@@ -1,0 +1,40 @@
+#1:
+
+BEGIN;
+    INSERT INTO booker.savepoint VALUES (1, 'savepoint1',common_time.sysdate());
+    SAVEPOINT my_savepoint;
+    INSERT INTO booker.savepoint VALUES (2, 'savepoint2',common_time.sysdate());
+    ROLLBACK TO SAVEPOINT my_savepoint;
+    INSERT INTO booker.savepoint VALUES (3, 'savepoint3',common_time.sysdate());
+--  COMMIT;
+END;
+
+#2:
+
+CREATE OR REPLACE FUNCTION test_savepoint()
+RETURNS void AS
+$BODY$
+DECLARE
+BEGIN
+    FOR lc IN 1 .. 100 LOOP
+    INSERT INTO booker.savepoint VALUES (1, 'savepoint1',common_time.sysdate());
+    SAVEPOINT my_savepoint;
+    INSERT INTO booker.savepoint VALUES (2, 'savepoint2',common_time.sysdate());
+    ROLLBACK TO SAVEPOINT my_savepoint;
+    INSERT INTO booker.savepoint VALUES (3, 'savepoint3',common_time.sysdate());
+    END LOOP;
+END;
+$BODY$
+LANGUAGE 'plpgsql' VOLATILE;
+
+
+CREATE OR REPLACE FUNCTION test_savepoint() 
+  RETURNS void AS 
+$BODY$ 
+DECLARE 
+BEGIN 
+select count(1) from booker.savepoint;
+END; 
+$BODY$ 
+LANGUAGE 'plpgsql' VOLATILE; 
+
